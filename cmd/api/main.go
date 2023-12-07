@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 )
 
 const version = "1.0.0"
@@ -13,16 +15,35 @@ type config struct {
 	env  string
 }
 
+type application struct {
+	config config
+	logger *log.Logger
+}
+
 func main() {
 	var cfg config
 
-	flag.IntVar()
+	flag.IntVar(&cfg.port, "port", 4000, "API server port")
+	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|stage|prod)")
+	flag.Parse()
 
 	fmt.Println("hello")
 
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	app := &application{
+		config: cfg,
+		logger: logger,
+	}
+
+	addr := fmt.Sprintf(":%d", cfg.port)
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", healthcheck) //api endpoint and function to execute when getting incoming requests?
-	err := http.ListenAndServe(":4000", mux)       //using a defined serve mux like this prevents someone else from redefining the global variable used if done as nil, thus making it more secure
+	mux.HandleFunc("/v1/healthcheck", app.healthcheck) //api endpoint and function to execute when getting incoming requests?
+	
+
+	logger.Printf("starting %s server on %s", cfg.env, addr)
+	err := http.ListenAndServe(addr, mux)       //using a defined serve mux like this prevents someone else from redefining the global variable used if done as nil, thus making it more secure
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -30,14 +51,5 @@ func main() {
 
 // This is the healthcheck endpoint
 func healthcheck(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
 
-	// env := "dev"
-
-	fmt.Fprintln(w, "status: available")
-	fmt.Fprintf(w, "environment: %s\n", env)
-	fmt.Fprintf(w, "version: %s\n", version)
 }
