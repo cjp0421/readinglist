@@ -38,10 +38,6 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", cfg.port)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheck) //api endpoint and function to execute when getting incoming requests?
-	
-
 	logger.Printf("starting %s server on %s", cfg.env, addr)
 	err := http.ListenAndServe(addr, mux)       //using a defined serve mux like this prevents someone else from redefining the global variable used if done as nil, thus making it more secure
 	if err != nil {
