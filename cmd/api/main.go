@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 const version = "1.0.0"
@@ -38,11 +39,17 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", cfg.port)
 
-	logger.Printf("starting %s server on %s", cfg.env, addr)
-	err := http.ListenAndServe(addr, mux)       //using a defined serve mux like this prevents someone else from redefining the global variable used if done as nil, thus making it more secure
-	if err != nil {
-		fmt.Println(err)
+	srv := &http.Server{
+		Addr: addr,
+		Handler: app.route(),
+		IdleTimeout: time.Minute,
+		ReadTimeout: 10 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
+
+	logger.Printf("starting %s server on %s", cfg.env, addr)
+	err:= srv.ListenAndServe()
+	logger.Fatal(err)
 }
 
 // This is the healthcheck endpoint

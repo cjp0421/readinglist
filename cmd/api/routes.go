@@ -2,6 +2,7 @@ package main
 
 import "net/http"
 
+//This instantiates all of the routes
 //this is a method tied to application that returns a new ServeMux
 func (app *application) route() *http.ServeMux {
 	mux := http.NewServeMux()
@@ -14,5 +15,6 @@ func (app *application) route() *http.ServeMux {
 	
 	mux.HandleFunc("/v1/books/", app.getUpdateDeleteBooksHandler) // Handles queries related to individual books
 	
+	//This returns the mux and all the handlers 
 	return mux
 }
