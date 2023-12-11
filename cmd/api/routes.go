@@ -3,7 +3,7 @@ package main
 import "net/http"
 
 //This instantiates all of the routes
-//this is a method tied to application that returns a new ServeMux
+//this is a method tied to application (it takes in app, defined in main.go as an instance of the struct type application) that returns a new ServeMux
 func (app *application) route() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/healthcheck", app.healthcheck) // this is an route
@@ -15,6 +15,6 @@ func (app *application) route() *http.ServeMux {
 	
 	mux.HandleFunc("/v1/books/", app.getUpdateDeleteBooksHandler) // Handles queries related to individual books
 	
-	//This returns the mux and all the handlers 
+	//This returns the mux and all the handlers associated with it
 	return mux
 }
