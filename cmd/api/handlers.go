@@ -52,6 +52,7 @@ func (app *application) getUpdateDeleteBooksHandler(w http.ResponseWriter, r *ht
 
 //Below is the definition of each specific case above
 
+// each of the methods below need to have a way to get the id of the book in question from the URL
 // getting a specific book
 func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("v1/books/"):]
