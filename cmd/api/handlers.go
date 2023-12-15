@@ -12,7 +12,9 @@ func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
-
+	//the encoding/marshalling for the healthcheck endpoint will be done differently from the others
+	//it's not going to use a struct to convert the json to and from the messages, it's going to use native types
+	//it's going to assume based on the data type of the go object itself what type of json values should be marshalled into the response
 	fmt.Fprintln(w, "status: available")
 	fmt.Fprintf(w, "environment: %s\n", app.config.env)
 	fmt.Fprintf(w, "version: %s\n", version)
