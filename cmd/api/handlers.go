@@ -40,7 +40,7 @@ func (app *application) getUpdateDeleteBooksHandler(w http.ResponseWriter, r *ht
 		app.getBook(w, r)
 
 	case http.MethodPut:
-		app.udpateBook(w, r)
+		app.updateBook(w, r)
 
 	case http.MethodDelete:
 		app.deleteBook(w, r)
@@ -55,14 +55,28 @@ func (app *application) getUpdateDeleteBooksHandler(w http.ResponseWriter, r *ht
 // each of the methods below need to have a way to get the id of the book in question from the URL
 // getting a specific book
 func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path[len("v1/books/"):]
+	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 	}
-	fmt.Fprintf(w, "Display the details pf boo with ID: %d", idInt)
+	fmt.Fprintf(w, "Display the details of book with ID: %d", idInt)
 }
 
 func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/v1/books/"):]
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+	}
+	fmt.Fprintf(w, "Update the details of the book with ID: %d", idInt)
+}
 
+func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/v1/books/"):]
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+	}
+	fmt.Fprintf(w, "Delete the book with ID: %d", idInt)
 }
