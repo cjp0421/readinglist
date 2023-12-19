@@ -49,7 +49,44 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 
 	//if the endpoint /v1/books is used with get, it does the following
 	if r.Method == http.MethodGet {
-		fmt.Fprintln(w, "Display a list of books on the reading list")
+		// fmt.Fprintln(w, "Display a list of books on the reading list")
+
+		//The variable book defines a slice of the data type called Book
+		books := []data.Book{
+			{
+				ID:        1,
+				CreatedAt: time.Now(),
+				Title:     "The Killer Called Collect",
+				Published: 1985,
+				Pages:     195,
+				Genres:    []string{"Fiction", "Thriller", "Mystery"},
+				Rating:    4.7,
+				Version:   1,
+			},
+			{
+				ID:        2,
+				CreatedAt: time.Now(),
+				Title:     "A Lilliard Family History",
+				Published: 1990,
+				Pages:     490,
+				Genres:    []string{"Non-Fiction", "Historical"},
+				Rating:    2.8,
+				Version:   1,
+			},
+		}
+
+		js, err := json.MarshalIndent(books, "", "\t") //This version of marshalling indents the displayed json and keys - in this case with a tab
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		js = append(js, '\n')
+
+		w.Header().Set("Content-Type", "application/json")
+
+		w.Write(js)
+		return
 	}
 	//if the endpoint /v1/books is used with post, it does the following
 	if r.Method == http.MethodPost {
