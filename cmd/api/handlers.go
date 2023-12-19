@@ -75,18 +75,26 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			},
 		}
 
-		js, err := json.MarshalIndent(books, "", "\t") //This version of marshalling indents the displayed json and keys - in this case with a tab
-		if err != nil {
+		//The following code is commented out because the helper.go file will take its place
+		// js, err := json.MarshalIndent(books, "", "\t") //This version of marshalling indents the displayed json and keys - in this case with a tab
+		// if err != nil {
+		// 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		// 	return
+		// }
+
+		// js = append(js, '\n')
+
+		// w.Header().Set("Content-Type", "application/json")
+
+		// w.Write(js)
+		// return
+
+		//The code below calls the helper.go function to format, marshall, and write the json
+		if err := app.writeJSON(w, http.StatusOK, books); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		js = append(js, '\n')
-
-		w.Header().Set("Content-Type", "application/json")
-
-		w.Write(js)
-		return
 	}
 	//if the endpoint /v1/books is used with post, it does the following
 	if r.Method == http.MethodPost {
@@ -138,19 +146,26 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 		Version:   1,
 	}
 
-	//Below creates the json object by marshalling the new instance of the Book struct
-	//because the book variable is a struct, Go knows how to create the json object with the correct data types
-	js, err := json.Marshal(book)
-
-	if err != nil {
+	//The code below calls the helper.go function to format, marshall, and write the json
+	if err := app.writeJSON(w, http.StatusOK, book); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 
-	js = append(js, '\n')
+	//The code below has been replaced with the code above
+	// //Below creates the json object by marshalling the new instance of the Book struct
+	// //because the book variable is a struct, Go knows how to create the json object with the correct data types
+	// js, err := json.Marshal(book)
 
-	w.Header().Set("Content-Type", "application/json")
+	// if err != nil {
+	// 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	// }
 
-	w.Write(js)
+	// js = append(js, '\n')
+
+	// w.Header().Set("Content-Type", "application/json")
+
+	// w.Write(js)
 }
 
 func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
