@@ -44,6 +44,7 @@ func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 // This is a Handler - an app method handling getting and creating new books within the total list of books
+
 func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Request) {
 	//the if statement validates that the request at this endpoint is only either GET or POST
 
@@ -90,7 +91,8 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 		// return
 
 		//The code below calls the helper.go function to format, marshall, and write the json
-		if err := app.writeJSON(w, http.StatusOK, books); err != nil {
+		//the envelope that is wrapping the books variable is naming that collection of data books and then returning the data of the books variable
+		if err := app.writeJSON(w, http.StatusOK, envelope{"books": books}); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -147,7 +149,8 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//The code below calls the helper.go function to format, marshall, and write the json
-	if err := app.writeJSON(w, http.StatusOK, book); err != nil {
+	//the envelope that is wrapping the book variable is naming that collection of data book and then returning the data of the book variable
+	if err := app.writeJSON(w, http.StatusOK, envelope{"book": book}); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
