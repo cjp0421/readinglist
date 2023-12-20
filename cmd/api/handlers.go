@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time" // Imported because it is used in the new instance of a book
@@ -100,7 +101,31 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 	}
 	//if the endpoint /v1/books is used with post, it does the following
 	if r.Method == http.MethodPost {
-		fmt.Fprintln(w, "Added a new book to the reading list")
+		// fmt.Fprintln(w, "Added a new book to the reading list")
+		//below are the pieces of information we expect that will then be unmarshalled into a go object
+		//we are not using the Book struct that already exists because that contains different fields we don't need/want
+		var input struct {
+			Title     string   `json:"title"`
+			Published int      `json:"published"`
+			Pages     int      `json:"pages"`
+			Genres    []string `json:"genres"`
+			Rating    float64  `json:"rating"`
+		}
+
+		//because there is a body with the http request we have to do something with that
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		// Below unmarshalls the body into the dereferenced input struct
+		err = json.Unmarshal(body, &input)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+		fmt.Fprintf(w, "%v\n", input) //this prints out the http response formatted with line breaks as the input struct
 	}
 
 }
