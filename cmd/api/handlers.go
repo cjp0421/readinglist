@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time" // Imported because it is used in the new instance of a book
@@ -113,7 +113,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 		}
 
 		//because there is a body with the http request we have to do something with that
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -202,7 +202,68 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 	}
-	fmt.Fprintf(w, "Update the details of the book with ID: %d", idInt)
+	// fmt.Fprintf(w, "Update the details of the book with ID: %d", idInt)
+
+	//the struct below defines the way that we want to unmarshall the json
+	//we are using pointers because we want to modify the existing struct instead of creating a new one
+
+	var input struct {
+		Title     *string  `json:"title"`
+		Published *int     `json:"published"`
+		Pages     *int     `json:"pages"`
+		Genres    []string `json:"genres"`
+		Rating    *float32 `json:"rating"`
+	}
+
+	//this is a mock record that is acting as the record we want to update
+	//this will be replaced with the database eventually
+	//the book variable is what will be updated by the request that is coming in
+	book := data.Book{
+		ID:        idInt,
+		CreatedAt: time.Now(),
+		Title:     "The Handbook for the Recently Deceased",
+		Published: 1,
+		Pages:     999,
+		Genres:    []string{"NonFiction", "Self-Help", "Religion and Spirituality"},
+		Rating:    1.5,
+		Version:   1,
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if input.Title != nil {
+		book.Title = *input.Title
+	}
+
+	if input.Published != nil {
+		book.Published = *input.Published
+	}
+
+	if input.Pages != nil {
+		book.Pages = *input.Pages
+	}
+
+	//why doesn't this use an asterisk? Is it because we want it to be overwritten?
+	if len(input.Genres) > 0 {
+		book.Genres = input.Genres
+	}
+
+	if input.Rating != nil {
+		book.Rating = *input.Rating
+	}
+
+	fmt.Fprintf(w, "%v\n", book)
+
 }
 
 func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {

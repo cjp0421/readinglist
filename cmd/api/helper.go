@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 )
 
@@ -22,6 +24,25 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any) e
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(js)
+
+	return nil
+}
+
+// this function replaces having an unmarshall function inside handlers.go
+// it also helps protect the web service by setting a maximum allowed bytes
+// and it disallows unknown fields, meaning you can pass in json fields that aren't part of the struct that is defined on the interface
+// that's why this uses the decoder instead of just unmarshall
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	maxBytes := 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes)) //sets max bytes
+
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields() //disallows unknown fields
+
+	err := dec.Decode(&struct{}{})
+	if err != io.EOF {
+		return errors.New("body must only contain a single JSON object")
+	}
 
 	return nil
 }
