@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"time" // Imported because it is used in the new instance of a book
@@ -112,15 +111,18 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Rating    float64  `json:"rating"`
 		}
 
-		//because there is a body with the http request we have to do something with that
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
+		//The code below is replaced by the json read helper function
+		// //because there is a body with the http request we have to do something with that
+		// body, err := io.ReadAll(r.Body)
+		// if err != nil {
+		// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		// 	return
+		// }
 
-		// Below unmarshalls the body into the dereferenced input struct
-		err = json.Unmarshal(body, &input)
+		// // Below unmarshalls the body into the dereferenced input struct
+		// err = json.Unmarshal(body, &input)
+
+		err := app.readJSON(w, r, &input)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -130,7 +132,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 
 }
 
-// This is another Handler (starts at 745) - an app method handling the get, update, deleting specific books
+// This is another Handler - an app method handling the get, update, deleting specific books
 // Below is a request multiplexer (aka a request router). It routes incoming requests to a handler using a set of rules
 func (app *application) getUpdateDeleteBooksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -229,13 +231,16 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		Version:   1,
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
+	//The code below has been replaced with the JSON read helper function
+	// body, err := io.ReadAll(r.Body)
+	// if err != nil {
+	// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	// 	return
+	// }
 
-	err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
+	// err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
+
+	err = app.readJSON(w, r, &input)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
