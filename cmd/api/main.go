@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql" //package provides a generic api that allows for interacting with the databases in a vendor-neutral way
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq" //This is a driver; this is the go package for the sql database driver; third-party package
 )
 
 const version = "1.0.0"
@@ -14,6 +17,7 @@ const version = "1.0.0"
 type config struct {
 	port int
 	env  string
+	dsn  string // short for data name service; aka a data connection string; this will be passed in so we can connect to the database
 }
 
 type application struct {
@@ -26,6 +30,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|stage|prod)")
+	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("READINGLIST_DB_DSN"), "PostgreSQL DSN")
 	flag.Parse()
 
 	fmt.Println("hello")
@@ -36,6 +41,21 @@ func main() {
 		config: cfg,
 		logger: logger,
 	}
+
+	//below opens the database connection
+	db, err := sql.Open("postgres", cfg.dsn)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	defer db.Close() //this closes the connection
+
+	err = db.Ping() //this tests the connection
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	logger.Printf("database connection pool established")
 
 	addr := fmt.Sprintf(":%d", cfg.port)
 
@@ -48,6 +68,6 @@ func main() {
 	}
 
 	logger.Printf("starting %s server on %s", cfg.env, addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	logger.Fatal(err)
 }
