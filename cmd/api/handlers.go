@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -50,49 +51,16 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 
 	//if the endpoint /v1/books is used with get, it does the following
 	if r.Method == http.MethodGet {
-		// fmt.Fprintln(w, "Display a list of books on the reading list")
-
 		//The variable book defines a slice of the data type called Book
-		books := []data.Book{
-			{
-				ID:        1,
-				CreatedAt: time.Now(),
-				Title:     "The Killer Called Collect",
-				Published: 1985,
-				Pages:     195,
-				Genres:    []string{"Fiction", "Thriller", "Mystery"},
-				Rating:    4.7,
-				Version:   1,
-			},
-			{
-				ID:        2,
-				CreatedAt: time.Now(),
-				Title:     "A Lilliard Family History",
-				Published: 1990,
-				Pages:     490,
-				Genres:    []string{"Non-Fiction", "Historical"},
-				Rating:    2.8,
-				Version:   1,
-			},
+		books, err := app.models.Books.GetAll()
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		}
-
-		//The following code is commented out because the helper.go file will take its place
-		// js, err := json.MarshalIndent(books, "", "\t") //This version of marshalling indents the displayed json and keys - in this case with a tab
-		// if err != nil {
-		// 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		// 	return
-		// }
-
-		// js = append(js, '\n')
-
-		// w.Header().Set("Content-Type", "application/json")
-
-		// w.Write(js)
-		// return
 
 		//The code below calls the helper.go function to format, marshall, and write the json
 		//the envelope that is wrapping the books variable is naming that collection of data books and then returning the data of the books variable
-		if err := app.writeJSON(w, http.StatusOK, envelope{"books": books}); err != nil {
+		if err := app.writeJSON(w, http.StatusOK, envelope{"books": books}, nil); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -111,23 +79,36 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Rating    float64  `json:"rating"`
 		}
 
-		//The code below is replaced by the json read helper function
-		// //because there is a body with the http request we have to do something with that
-		// body, err := io.ReadAll(r.Body)
-		// if err != nil {
-		// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		// 	return
-		// }
-
-		// // Below unmarshalls the body into the dereferenced input struct
-		// err = json.Unmarshal(body, &input)
-
 		err := app.readJSON(w, r, &input)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		fmt.Fprintf(w, "%v\n", input) //this prints out the http response formatted with line breaks as the input struct
+
+		book := &data.Book{
+			Title:     input.Title,
+			Published: input.Published,
+			Pages:     input.Pages,
+			Genres:    input.Genres,
+			Rating:    float32(input.Rating),
+		}
+
+		err = app.models.Books.Insert(book)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		headers := make(http.Header)
+		headers.Set("Location", fmt.Sprintf("v1/books/%d", book.ID))
+
+		//This writes the JSON response with a 201 Created status code and the Location header set
+		err = app.writeJSON(w, http.StatusCreated, envelope{"book": book}, headers)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 
 }
@@ -160,42 +141,27 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 	}
-	fmt.Fprintf(w, "Display the details of book with ID: %d", idInt)
-	//for now, hard-coding a new instance of the book object
+
 	//this will be removed when this application si connection to a database
 	//this is using the struct from the internal/data package
-	book := data.Book{
-		ID:        idInt,
-		CreatedAt: time.Now(),
-		Title:     "The Corpse Danced at Midnight",
-		Published: 1984,
-		Pages:     190,
-		Genres:    []string{"Fiction", "Thriller", "Mystery"},
-		Rating:    4.8,
-		Version:   1,
+	book, err := app.models.Books.Get(idInt)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.New("record not found")):
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		default:
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return
 	}
 
 	//The code below calls the helper.go function to format, marshall, and write the json
 	//the envelope that is wrapping the book variable is naming that collection of data book and then returning the data of the book variable
-	if err := app.writeJSON(w, http.StatusOK, envelope{"book": book}); err != nil {
+	if err := app.writeJSON(w, http.StatusOK, envelope{"book": book}, nil); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	//The code below has been replaced with the code above
-	// //Below creates the json object by marshalling the new instance of the Book struct
-	// //because the book variable is a struct, Go knows how to create the json object with the correct data types
-	// js, err := json.Marshal(book)
-
-	// if err != nil {
-	// 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	// }
-
-	// js = append(js, '\n')
-
-	// w.Header().Set("Content-Type", "application/json")
-
-	// w.Write(js)
 }
 
 func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
@@ -230,13 +196,6 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		Rating:    1.5,
 		Version:   1,
 	}
-
-	//The code below has been replaced with the JSON read helper function
-	// body, err := io.ReadAll(r.Body)
-	// if err != nil {
-	// 	http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	// 	return
-	// }
 
 	// err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
 

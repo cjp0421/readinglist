@@ -10,6 +10,8 @@ import (
 	"time"
 
 	_ "github.com/lib/pq" //This is a driver; this is the go package for the sql database driver; third-party package
+
+	"readinglist/internal/data"
 )
 
 const version = "1.0.0"
@@ -23,6 +25,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
