@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time" // Imported because it is used in the new instance of a book
+
+	// Imported because it is used in the new instance of a book
 
 	"readinglist/internal/data" // this imports the data package; one can use the cat go.mod command in terminal to determine how to begin import statement if needed
 )
@@ -84,7 +85,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		fmt.Fprintf(w, "%v\n", input) //this prints out the http response formatted with line breaks as the input struct
+		// fmt.Fprintf(w, "%v\n", input) //this prints out the http response formatted with line breaks as the input struct
 
 		book := &data.Book{
 			Title:     input.Title,
@@ -140,6 +141,7 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	//this will be removed when this application si connection to a database
@@ -169,8 +171,20 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
 	}
 	// fmt.Fprintf(w, "Update the details of the book with ID: %d", idInt)
+
+	book, err := app.models.Books.Get(idInt)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.New("record not found")):
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		default:
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return
+	}
 
 	//the struct below defines the way that we want to unmarshall the json
 	//we are using pointers because we want to modify the existing struct instead of creating a new one
@@ -181,20 +195,6 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		Pages     *int     `json:"pages"`
 		Genres    []string `json:"genres"`
 		Rating    *float32 `json:"rating"`
-	}
-
-	//this is a mock record that is acting as the record we want to update
-	//this will be replaced with the database eventually
-	//the book variable is what will be updated by the request that is coming in
-	book := data.Book{
-		ID:        idInt,
-		CreatedAt: time.Now(),
-		Title:     "The Handbook for the Recently Deceased",
-		Published: 1,
-		Pages:     999,
-		Genres:    []string{"NonFiction", "Self-Help", "Religion and Spirituality"},
-		Rating:    1.5,
-		Version:   1,
 	}
 
 	// err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
@@ -226,7 +226,17 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		book.Rating = *input.Rating
 	}
 
-	fmt.Fprintf(w, "%v\n", book)
+	//why are we using the err variable for this?
+	err = app.models.Books.Update(book)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if err := app.writeJSON(w, http.StatusOK, envelope{"book": book}, nil); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 
 }
 
