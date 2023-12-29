@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	// Imported because it is used in the new instance of a book
-
 	"readinglist/internal/data" // this imports the data package; one can use the cat go.mod command in terminal to determine how to begin import statement if needed
 )
 
@@ -137,6 +135,7 @@ func (app *application) getUpdateDeleteBooksHandler(w http.ResponseWriter, r *ht
 // each of the methods below need to have a way to get the id of the book in question from the URL
 // getting a specific book
 func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
+	//below is where we get access the book id from the url
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -167,13 +166,13 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
+	//below is where we get access the book id from the url
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	// fmt.Fprintf(w, "Update the details of the book with ID: %d", idInt)
 
 	book, err := app.models.Books.Get(idInt)
 	if err != nil {
@@ -193,12 +192,11 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		Title     *string  `json:"title"`
 		Published *int     `json:"published"`
 		Pages     *int     `json:"pages"`
-		Genres    []string `json:"genres"`
+		Genres    []string `json:"genres"` //not sure why this one isn't a pointer?
 		Rating    *float32 `json:"rating"`
 	}
 
-	// err = json.Unmarshal(body, &input) //not sure why we are doing this with err?
-
+	//uses the helper function to unmarshall the json into a go object
 	err = app.readJSON(w, r, &input)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -217,7 +215,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		book.Pages = *input.Pages
 	}
 
-	//why doesn't this use an asterisk? Is it because we want it to be overwritten?
+	//why doesn't this use an asterisk/pointer? Is it because we want it to be overwritten?
 	if len(input.Genres) > 0 {
 		book.Genres = input.Genres
 	}
@@ -227,6 +225,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//why are we using the err variable for this?
+	//this is where the record is being updated in the database
 	err = app.models.Books.Update(book)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -241,10 +240,28 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {
+	//below is where we get access the book id from the url
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 	}
 	fmt.Fprintf(w, "Delete the book with ID: %d", idInt)
+
+	err = app.models.Books.Delete(idInt)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.New("record not found")):
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		default:
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "book successfully deleted"}, nil)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
