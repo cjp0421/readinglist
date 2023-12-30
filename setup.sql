@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS books (
     pages integer NOT NULL,
     genres text[] NOT NULL,
     version integer NOT NULL DEFAULT 1,
-    rating integer NOT NULL
+    rating integer NOT NULL /*Need to check into whether this is the correct type or not*/
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON books TO readinglist;
