@@ -38,12 +38,8 @@ func main() {
 
 	fmt.Println("hello")
 
+	cfg.dsn = "postgres://postgres:mysecretpassword@localhost/readinglist?sslmode=disable"
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
-
-	app := &application{
-		config: cfg,
-		logger: logger,
-	}
 
 	//below opens the database connection
 	db, err := sql.Open("postgres", cfg.dsn)
@@ -51,14 +47,20 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	defer db.Close() //this closes the connection
-
 	err = db.Ping() //this tests the connection
 	if err != nil {
 		logger.Fatal(err)
 	}
 
+	defer db.Close() //this closes the connection
+
 	logger.Printf("database connection pool established")
+
+	app := &application{
+		config: cfg,
+		logger: logger,
+		models: data.NewModels(db),
+	}
 
 	addr := fmt.Sprintf(":%d", cfg.port)
 

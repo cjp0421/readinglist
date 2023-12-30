@@ -139,7 +139,7 @@ func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Request1", http.StatusBadRequest)
 		return
 	}
 
@@ -170,7 +170,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Request2", http.StatusBadRequest)
 		return
 	}
 
@@ -244,7 +244,7 @@ func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/v1/books/"):]
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Request3", http.StatusBadRequest)
 	}
 	fmt.Fprintf(w, "Delete the book with ID: %d", idInt)
 

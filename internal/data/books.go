@@ -39,8 +39,7 @@ func (b BookModel) Insert(book *Book) error {
 	query := `
 	INSERT INTO books (title, published, pages, genres, rating)
 	VALUES ($1, $2, $3, $4, $5)
-	RETURNING id, created_at, version
-	`
+	RETURNING id, created_at, version`
 
 	//the blank interface below is taking in all the information from the pointer to a book above and then populates the query variable VALUES
 	args := []interface{}{book.Title, book.Published, book.Pages, pq.Array(book.Genres), book.Rating}
@@ -61,8 +60,7 @@ func (b BookModel) Get(id int64) (*Book, error) {
 	query := `
 	SELECT id, created_at, title, published, pages, genres, rating, version
 	FROM books
-	WHERE id = $1
-	`
+	WHERE id = $1`
 	//this variable is used to hold all of the information for the book record from the database
 	var book Book
 	//Below passes back the scanned information
@@ -96,8 +94,7 @@ func (b BookModel) Update(book *Book) error {
 	UPDATE books
 	SET title = $1, published = $2, pages = $3, genres = $4, rating = $5, version = version +1
 	WHERE id = $6 AND version = $7
-	RETURNING version
-	`
+	RETURNING version`
 
 	args := []interface{}{book.Title, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ID, book.Version}
 	return b.DB.QueryRow(query, args...).Scan(&book.Version)
@@ -110,8 +107,7 @@ func (b BookModel) Delete(id int64) error {
 
 	query := `
 	DELETE FROM books
-	WHERE id = $1
-	`
+	WHERE id = $1`
 
 	results, err := b.DB.Exec(query, id)
 	if err != nil {

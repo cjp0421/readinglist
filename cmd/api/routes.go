@@ -15,6 +15,5 @@ func (app *application) route() *http.ServeMux {
 
 	mux.HandleFunc("/v1/books/", app.getUpdateDeleteBooksHandler) // Handles queries related to individual books
 
-	//This returns the mux and all the handlers associated with it
-	return mux
+	return mux //This returns the mux and all the handlers associated with it
 }

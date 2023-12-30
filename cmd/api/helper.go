@@ -16,7 +16,7 @@ type envelope map[string]any
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return http.ErrAbortHandler
+		return err
 	}
 
 	js = append(js, '\n')
@@ -42,6 +42,10 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields() //disallows unknown fields
+
+	if err := dec.Decode(dst); err != nil {
+		return err
+	}
 
 	err := dec.Decode(&struct{}{})
 	if err != io.EOF {
