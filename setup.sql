@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS books (
     published integer NOT NULL,
     pages integer NOT NULL,
     genres text[] NOT NULL,
-    rating real NOT NULL 
-    version integer NOT NULL DEFAULT 1,
+    rating real NOT NULL, 
+    version integer NOT NULL DEFAULT 1
 );
 /*changed data type of rating to real to accomodate decimals */
 GRANT SELECT, INSERT, UPDATE, DELETE ON books TO readinglist;
