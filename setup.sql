@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS books (
     published integer NOT NULL,
     pages integer NOT NULL,
     genres text[] NOT NULL,
+    rating real NOT NULL 
     version integer NOT NULL DEFAULT 1,
-    rating integer NOT NULL /*Need to check into whether this is the correct type or not*/
 );
-
+/*changed data type of rating to real to accomodate decimals */
 GRANT SELECT, INSERT, UPDATE, DELETE ON books TO readinglist;
 
 GRANT USAGE, SELECT ON SEQUENCE books_id_seq TO readinglist;

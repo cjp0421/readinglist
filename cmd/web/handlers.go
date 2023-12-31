@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -67,7 +69,7 @@ func (app *application) bookCreateForm(w http.ResponseWriter, r *http.Request) {
 		"<label for=\"pages\">Pages</label><input type=\"number\" name=\"pages\" id=\"pages\">"+
 		"<label for=\"published\">Published</label><input type=\"number\" name=\"published\" id=\"published\">"+
 		"<label for=\"genres\">Genres</label><input type=\"text\" name=\"genres\" id=\"genres\">"+
-		"<label for=\"rating\">Rating</label><input type=\"number\" name=\"rating\" id=\"rating\">"+
+		"<label for=\"rating\">Rating</label><input type=\"number\" step=\"0.1\" name=\"rating\" id=\"rating\">"+
 		"<button type=\"submit\">Create</form></body></html>")
 }
 
@@ -93,11 +95,13 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 	genres := strings.Split(r.PostFormValue("genres"), " ")
 
 	//deviated from video and made this an int due to issues getting it to work when using a float64/float32 in some places
-	rating, err := strconv.Atoi(r.PostFormValue("pages"))
-	if err != nil || rating < 1 {
+	ratingFloat, err := strconv.ParseFloat(r.PostFormValue("rating"), 32)
+	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+
+	rating := float32(ratingFloat)
 
 	//check into Rating type elsewhere to make sure it's uniform
 	book := struct {
@@ -105,7 +109,7 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		Pages     int      `json:"pages"`
 		Published int      `json:"published"`
 		Genres    []string `json:"genres"`
-		Rating    int      `json:"rating"`
+		Rating    float32  `json:"rating"`
 	}{
 		Title:     title,
 		Pages:     pages,
@@ -119,4 +123,24 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
+	req, _ := http.NewRequest("POST", app.readinglist.Endpoint, bytes.NewBuffer(data))
+	req.Header.Set("Content-type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		log.Printf("unexpected status: %s", resp.Status)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -28,7 +28,7 @@ type Book struct {
 
 // this type is connected to all of the methods that implement the crud operations
 type BookModel struct {
-	DB *sql.DB
+	DB *sql.DB //this is a pointer to the sql database connection
 }
 
 // this method "hangs off of" the BookModel type - like all of the following methods
@@ -43,11 +43,11 @@ func (b BookModel) Insert(book *Book) error {
 
 	//the blank interface below is taking in all the information from the pointer to a book above and then populates the query variable VALUES
 	args := []interface{}{book.Title, book.Published, book.Pages, pq.Array(book.Genres), book.Rating}
-	//returns the auto-generated system values to Go object
+
 	//this first runs the INSERT statement with the query and the args so the row is put into the database
 	//it then returns back some values with the second part (which corresponds to the RETURNING part of the statement above)
 	//the Scan part returns dereferenced pointers to those aspects of the book object because these are system generated
-	return b.DB.QueryRow(query, args...).Scan(&book.ID, &book.CreatedAt, &book.Version)
+	return b.DB.QueryRow(query, args...).Scan(&book.ID, &book.CreatedAt, &book.Version) //returns the dereferenced pointer, auto-generated values to Go object
 }
 
 // this method takes in a book id and returns a pointer to a book and an error

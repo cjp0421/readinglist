@@ -75,7 +75,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Published int      `json:"published"`
 			Pages     int      `json:"pages"`
 			Genres    []string `json:"genres"`
-			Rating    float64  `json:"rating"`
+			Rating    float32  `json:"rating"`
 		}
 
 		err := app.readJSON(w, r, &input)
@@ -90,7 +90,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Published: input.Published,
 			Pages:     input.Pages,
 			Genres:    input.Genres,
-			Rating:    float32(input.Rating),
+			Rating:    input.Rating,
 		}
 
 		err = app.models.Books.Insert(book)
@@ -99,8 +99,9 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		headers := make(http.Header)
-		headers.Set("Location", fmt.Sprintf("v1/books/%d", book.ID))
+		//this makes the application aware of the new location for the new book
+		headers := make(http.Header)                                 //this makes the new header for the http response
+		headers.Set("Location", fmt.Sprintf("v1/books/%d", book.ID)) //this sets the location of the book to the value of the the books/ api with the new book's id appended to it
 
 		//This writes the JSON response with a 201 Created status code and the Location header set
 		err = app.writeJSON(w, http.StatusCreated, envelope{"book": book}, headers)
@@ -174,7 +175,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := app.models.Books.Get(idInt)
+	book, err := app.models.Books.Get(idInt) //this calls the database to get the specific book record with the id from the url
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.New("record not found")):
@@ -232,6 +233,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//this returns back a response of what was updated
 	if err := app.writeJSON(w, http.StatusOK, envelope{"book": book}, nil); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -259,6 +261,7 @@ func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//this is a returned response that uses the app.WriteJSON helper function that says the book was deleted
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "book successfully deleted"}, nil)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
