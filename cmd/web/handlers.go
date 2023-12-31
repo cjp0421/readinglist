@@ -72,7 +72,7 @@ func (app *application) bookCreateForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request) {
-	title := r.PostFormValue("title")
+	title := r.PostFormValue("title") //grabs the title from the POST request
 	if title == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
