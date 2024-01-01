@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -22,11 +23,29 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "<html><head><title>Reading List</title></head><body><h1>Reading List</h1><ul>") //the browser will render this html
-	for _, book := range *books {                                                                   //for loop ranges over all of the items in the book
-		fmt.Fprintf(w, "<li>%s (%d)</li>", book.Title, book.Pages) //prints out each book title and the page number as a list item
+
+	//below is a variable that is a slice of strings that have the path to the templates we want to use on the home page
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/home.html",
 	}
-	fmt.Fprintf(w, "</ul></body></html>") //closes the html
+
+	//this parses the files at the string locations in the variable files
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	//this executes the template base first and then pulls in other templates
+	err = ts.ExecuteTemplate(w, "base", books) //this takes in the io writer, the name of the first template, and the data contained in books
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "Internal server error", 500)
+		return
+	}
 
 }
 
