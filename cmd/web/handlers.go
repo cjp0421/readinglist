@@ -103,14 +103,14 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 
 	rating := float32(ratingFloat)
 
-	//check into Rating type elsewhere to make sure it's uniform
+	//below is an anonymous struct - those have to be instantiated right away
 	book := struct {
 		Title     string   `json:"title"`
 		Pages     int      `json:"pages"`
 		Published int      `json:"published"`
 		Genres    []string `json:"genres"`
 		Rating    float32  `json:"rating"`
-	}{
+	}{ //this is a struct literal
 		Title:     title,
 		Pages:     pages,
 		Published: published,
@@ -127,8 +127,9 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 	req, _ := http.NewRequest("POST", app.readinglist.Endpoint, bytes.NewBuffer(data))
 	req.Header.Set("Content-type", "application/json")
 
+	//below creates the client
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //this is where the request is actually sent to the web service
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -142,5 +143,5 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther) //redirects to the homepage which will be updated with the new book as landing there sends a request for all books in the table
 }
