@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -62,7 +61,29 @@ func (app *application) bookView(w http.ResponseWriter, r *http.Request) { //thi
 		return
 	}
 
-	fmt.Fprintf(w, "%s (%d)\n", book.Title, book.Pages) //prints out the title of the specific book and the number of pages
+	//this pulls in the files with the templates we'll combine to create the page
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/view.html",
+	}
+
+	//used to convert comma-separated genres to a slice within the template
+	funcs := template.FuncMap{"join": strings.Join}
+
+	ts, err := template.New("showBook").Funcs(funcs).ParseFiles(files...)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal Server Error", 500)
+		return
+	}
+
+	err = ts.ExecuteTemplate(w, "base", book)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
 }
 
 // the method below needs to use both the GET method and the POST method
@@ -81,46 +102,61 @@ func (app *application) bookCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) bookCreateForm(w http.ResponseWriter, r *http.Request) {
-	//below the html for the form is written
-	fmt.Fprintf(w, "<html><head><title>Create Book</title></head>"+
-		"<body><h1>Create Book</h1><form action=\"/book/create\" method=\"post\">"+
-		"<label for=\"title\">Title</label><input type=\"text\" name=\"title\" id=\"title\">"+
-		"<label for=\"pages\">Pages</label><input type=\"number\" name=\"pages\" id=\"pages\">"+
-		"<label for=\"published\">Published</label><input type=\"number\" name=\"published\" id=\"published\">"+
-		"<label for=\"genres\">Genres</label><input type=\"text\" name=\"genres\" id=\"genres\">"+
-		"<label for=\"rating\">Rating</label><input type=\"number\" step=\"0.1\" name=\"rating\" id=\"rating\">"+
-		"<button type=\"submit\">Create</form></body></html>")
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/create.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	// nil is used here because we don't have any data we want to pass in
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Internal Sever Error", 500)
+		return
+	}
 }
 
 func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request) {
-	title := r.PostFormValue("title") //grabs the title from the POST request
-	if title == "" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	pages, err := strconv.Atoi(r.PostFormValue("pages"))
-	if err != nil || pages < 1 {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
+	//the value in the Get method needs to match the name attribute in the html form
+	title := r.PostForm.Get("title")
 
-	published, err := strconv.Atoi(r.PostFormValue("published"))
-	if err != nil || published < 1 {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	genres := strings.Split(r.PostFormValue("genres"), " ")
-
-	//deviated from video and made this an int due to issues getting it to work when using a float64/float32 in some places
-	ratingFloat, err := strconv.ParseFloat(r.PostFormValue("rating"), 32)
+	//published and pages needs to include error handling because they are being converted from one data type to another
+	published, err := strconv.Atoi(r.PostForm.Get("published"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	rating := float32(ratingFloat)
+	pages, err := strconv.Atoi(r.PostForm.Get("pages"))
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	//genres is being split apart at each comma and converting it into a slice of strings
+	genres := strings.Split(r.PostForm.Get("genres"), ",")
+
+	rating, err := strconv.ParseFloat(r.PostForm.Get("rating"), 32)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
 	//below is an anonymous struct - those have to be instantiated right away
 	book := struct {
@@ -134,7 +170,7 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		Pages:     pages,
 		Published: published,
 		Genres:    genres,
-		Rating:    rating,
+		Rating:    float32(rating),
 	}
 
 	data, err := json.Marshal(book)
@@ -143,7 +179,12 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	req, _ := http.NewRequest("POST", app.readinglist.Endpoint, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", app.readinglist.Endpoint, bytes.NewBuffer(data))
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
 	req.Header.Set("Content-type", "application/json")
 
 	//below creates the client
