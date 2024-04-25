@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	r := http.NewServeMux()
+	r := mux.NewRouter()
 	r.HandleFunc("/v1/books/{id}", getBookHandler).Methods("GET")
 	http.ListenAndServe(":8080", r)
 }

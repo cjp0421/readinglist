@@ -18,7 +18,8 @@ type Book struct {
 	ID        int64     `json:"id"` //this json tag changes the field name from ID to id
 	CreatedAt time.Time `json:"-"`  //this json tag prevents this field from being displayed with the rest of the json when it is marshalled from the struct;
 	//the above is in the database, but not displayed elsewhere after the json is marshalled
-	Title     string   `json:"title"`               //this changes the title field to lower case
+	Title     string   `json:"title"` //this changes the title field to lower case
+	Author    string   `json:"author,omitempty"`
 	Published int      `json:"published,omitempty"` //this json tag makes this field optional
 	Pages     int      `json:"pages,omitempty"`
 	Genres    []string `json:"genres,omitempty"`
@@ -37,12 +38,12 @@ func (b BookModel) Insert(book *Book) error {
 	//the query variable holds the postgres sql statement that will be run to create a new record
 	//the values are "positional arguments" and are being populated by the args variable below
 	query := `
-	INSERT INTO books (title, published, pages, genres, rating)
-	VALUES ($1, $2, $3, $4, $5)
+	INSERT INTO books (title, author, published, pages, genres, rating)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING id, created_at, version`
 
 	//the blank interface below is taking in all the information from the pointer to a book above and then populates the query variable VALUES
-	args := []interface{}{book.Title, book.Published, book.Pages, pq.Array(book.Genres), book.Rating}
+	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating}
 
 	//this first runs the INSERT statement with the query and the args so the row is put into the database
 	//it then returns back some values with the second part (which corresponds to the RETURNING part of the statement above)
@@ -69,6 +70,7 @@ func (b BookModel) Get(id int64) (*Book, error) {
 		&book.ID,
 		&book.CreatedAt,
 		&book.Title,
+		&book.Author,
 		&book.Published,
 		&book.Pages,
 		pq.Array(&book.Genres),
@@ -92,11 +94,11 @@ func (b BookModel) Get(id int64) (*Book, error) {
 func (b BookModel) Update(book *Book) error {
 	query := `
 	UPDATE books
-	SET title = $1, published = $2, pages = $3, genres = $4, rating = $5, version = version +1
-	WHERE id = $6 AND version = $7
+	SET title = $1, author = $2, published = $3, pages = $4, genres = $5, rating = $6, version = version +1
+	WHERE id = $7 AND version = $8
 	RETURNING version`
 
-	args := []interface{}{book.Title, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ID, book.Version}
+	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ID, book.Version}
 	return b.DB.QueryRow(query, args...).Scan(&book.Version)
 }
 
