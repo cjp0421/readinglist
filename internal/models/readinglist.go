@@ -11,6 +11,7 @@ import (
 type Book struct { //type for each book in the envelopes
 	ID        int64    `json:"id"`
 	Title     string   `json:"title"`
+	Author    string   `json:"author"`
 	Published int      `json:"published"`
 	Pages     int      `json:"pages"`
 	Genres    []string `json:"genres"`

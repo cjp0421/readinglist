@@ -59,7 +59,7 @@ func (b BookModel) Get(id int64) (*Book, error) {
 	}
 	//this pulls the specific record from the database
 	query := `
-	SELECT id, created_at, title, published, pages, genres, rating, version
+	SELECT id, created_at, title, author, published, pages, genres, rating, version
 	FROM books
 	WHERE id = $1`
 	//this variable is used to hold all of the information for the book record from the database
@@ -157,6 +157,7 @@ func (b BookModel) GetAll() ([]*Book, error) {
 			&book.ID,
 			&book.CreatedAt,
 			&book.Title,
+			&book.Author,
 			&book.Published,
 			&book.Pages,
 			pq.Array(&book.Genres),

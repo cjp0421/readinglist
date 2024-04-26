@@ -72,6 +72,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 		//we are not using the Book struct that already exists because that contains different fields we don't need/want
 		var input struct {
 			Title     string   `json:"title"`
+			Author    string   `json:"author"`
 			Published int      `json:"published"`
 			Pages     int      `json:"pages"`
 			Genres    []string `json:"genres"`
@@ -87,6 +88,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 
 		book := &data.Book{
 			Title:     input.Title,
+			Author:    input.Author,
 			Published: input.Published,
 			Pages:     input.Pages,
 			Genres:    input.Genres,
@@ -191,6 +193,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		Title     *string  `json:"title"`
+		Author    *string  `json:"author"`
 		Published *int     `json:"published"`
 		Pages     *int     `json:"pages"`
 		Genres    []string `json:"genres"` //not sure why this one isn't a pointer?
@@ -206,6 +209,10 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 
 	if input.Title != nil {
 		book.Title = *input.Title
+	}
+
+	if input.Author != nil {
+		book.Author = *input.Author
 	}
 
 	if input.Published != nil {

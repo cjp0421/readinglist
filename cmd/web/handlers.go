@@ -136,6 +136,8 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 	//the value in the Get method needs to match the name attribute in the html form
 	title := r.PostForm.Get("title")
 
+	author := r.PostForm.Get("author")
+
 	//published and pages needs to include error handling because they are being converted from one data type to another
 	published, err := strconv.Atoi(r.PostForm.Get("published"))
 	if err != nil {
@@ -161,12 +163,14 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 	//below is an anonymous struct - those have to be instantiated right away
 	book := struct {
 		Title     string   `json:"title"`
+		Author    string   `json:"author"`
 		Pages     int      `json:"pages"`
 		Published int      `json:"published"`
 		Genres    []string `json:"genres"`
 		Rating    float32  `json:"rating"`
 	}{ //this is a struct literal
 		Title:     title,
+		Author:    author,
 		Pages:     pages,
 		Published: published,
 		Genres:    genres,
