@@ -14,7 +14,7 @@ import (
 	"readinglist/internal/data"
 )
 
-const version = "1.0.0"
+const version = "2.0.0"
 
 type config struct {
 	port int
@@ -75,4 +75,18 @@ func main() {
 	logger.Printf("starting %s server on %s", cfg.env, addr)
 	err = srv.ListenAndServe()
 	logger.Fatal(err)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

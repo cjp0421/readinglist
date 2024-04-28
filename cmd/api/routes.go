@@ -4,7 +4,7 @@ import "net/http"
 
 // This instantiates all of the routes
 // this is a method tied to application (it takes in app, defined in main.go as an instance of the struct type application) that returns a new ServeMux
-func (app *application) route() *http.ServeMux {
+func (app *application) route() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/healthcheck", app.healthcheck) // this is an route
 	// Endpoints are functions available through the API
@@ -15,5 +15,5 @@ func (app *application) route() *http.ServeMux {
 
 	mux.HandleFunc("/v1/books/", app.getUpdateDeleteBooksHandler) // Handles queries related to individual books
 
-	return mux //This returns the mux and all the handlers associated with it
+	return corsMiddleware(mux) //This returns the mux and all the handlers associated with it
 }
