@@ -8,5 +8,5 @@ Running The App
   ``go build`` \
   ``go run ./cmd/web/*.go `` 
 
-- React + Vite Frontend - run in readinglist-ui directory
+- React + Vite Frontend - run in readinglist-ui directory \
   ``npm run dev``
