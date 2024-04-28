@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { getBooks } from "../services/bookService";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -21,6 +21,9 @@ interface Book {
 export const Books: React.FC = () => {
     const [books, setBooks] = useState<Book[]>([]);
     const [error, setError] = useState<string | null>(null)
+    const [searchTerm, setSearchTerm] = useState<string | number>("")
+    const [sortColumn, setSortColumn] = useState<string>("id")
+    const [sortOrder, setSortOrder] = useState<string>("asc")
 
     useEffect(() => {
         getBooks().then(response => {
@@ -33,35 +36,82 @@ export const Books: React.FC = () => {
         }).catch(error => setError('Failed to fetch books: ' + error))
     }, []);
 
+    const handleHeaderClick = (column: string) => {
+        if (column === sortColumn) {
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+        } else {
+            setSortColumn(column)
+            setSortOrder("asc")
+        }
+    }
+
+    const filteredData = useMemo(() => {
+        if (searchTerm === "") {
+            return books
+        }
+        return books
+            .map((row) => {
+                if (row.id.toString().includes(String(searchTerm).toLowerCase()) ||
+                    row.title.includes(String(searchTerm).toLowerCase()) ||
+                    row.author.includes(String(searchTerm).toLowerCase()) /*||
+                    row.genres.toString().includes(String(searchTerm).toLowerCase())*/ ||
+                    row.pages.toString().includes(String(searchTerm).toLowerCase()) ||
+                    row.rating.toString().includes(String(searchTerm).toLowerCase())
+                ) {
+                    return row
+                }
+                return null;
+            }).filter(Boolean)
+    }, [searchTerm, books])
+
+
+    const sortedData = useMemo(() => {
+        const sorted = [...filteredData];
+
+        return sorted.sort((a, b) => {
+            const aValue = a[sortColumn]
+            const bValue = b[sortColumn]
+
+            if (sortOrder === "asc") {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        })
+    }, [filteredData, sortColumn, sortOrder])
+
     if (error) return <div>Error: {error}</div>
     if (!books.length) return <div>Loading books...</div>
 
     return (
         <div>
-            <h1>Book List</h1>
+            <header>
+                <h1>Book List</h1>
+                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Books" />
+            </header>
             <TableContainer component={Paper}>
                 <Table aria-label="simple table">
                     <TableHead>
                         <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Title</TableCell>
-                            <TableCell>Author</TableCell>
-                            <TableCell>Pubished</TableCell>
-                            <TableCell>Pages</TableCell>
-                            <TableCell>Genres</TableCell>
-                            <TableCell>Rating</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("id")} aria-label="ID">ID {sortColumn === "id" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("title")} aria-label="Title">Title {sortColumn === "title" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("author")} aria-label="Author">Author {sortColumn === "author" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("published")} aria-label="Published">Published {sortColumn === "published" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("pages")} aria-label="Pages">Pages {sortColumn === "pages" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="">Genres</TableCell>
+                            <TableCell className="columnHeader" onClick={() => handleHeaderClick("rating")} aria-label="Rating">Rating {sortColumn === "rating" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {books.map((book) => (
-                            <TableRow key={book.id}>
-                                <TableCell component="th" scope="row">{book.id}</TableCell>
-                                <TableCell>{book.title}</TableCell>
-                                <TableCell>{book.author}</TableCell>
-                                <TableCell>{book.published}</TableCell>
-                                <TableCell>{book.pages}</TableCell>
-                                <TableCell>{book.genres.join(', ')}</TableCell>
-                                <TableCell>{book.rating.toFixed(1)}</TableCell>
+                        {sortedData.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell component="th" scope="row">{row.id}</TableCell>
+                                <TableCell>{row.title}</TableCell>
+                                <TableCell>{row.author}</TableCell>
+                                <TableCell>{row.published}</TableCell>
+                                <TableCell>{row.pages}</TableCell>
+                                <TableCell>{row.genres.join(', ')}</TableCell>
+                                <TableCell>{row.rating.toFixed(1)}</TableCell>
                             </TableRow>
                         )
                         )}
