@@ -77,6 +77,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Pages     int      `json:"pages"`
 			Genres    []string `json:"genres"`
 			Rating    float32  `json:"rating"`
+			ISBN      string   `json:"isbn"`
 		}
 
 		err := app.readJSON(w, r, &input)
@@ -93,6 +94,7 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			Pages:     input.Pages,
 			Genres:    input.Genres,
 			Rating:    input.Rating,
+			ISBN:      input.ISBN,
 		}
 
 		err = app.models.Books.Insert(book)
@@ -198,6 +200,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		Pages     *int     `json:"pages"`
 		Genres    []string `json:"genres"` //not sure why this one isn't a pointer?
 		Rating    *float32 `json:"rating"`
+		ISBN      *string  `json:"isbn"`
 	}
 
 	//uses the helper function to unmarshall the json into a go object
@@ -230,6 +233,10 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 
 	if input.Rating != nil {
 		book.Rating = *input.Rating
+	}
+
+	if input.ISBN != nil {
+		book.ISBN = *input.ISBN
 	}
 
 	//why are we using the err variable for this?

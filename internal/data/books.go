@@ -24,6 +24,7 @@ type Book struct {
 	Pages     int      `json:"pages,omitempty"`
 	Genres    []string `json:"genres,omitempty"`
 	Rating    float32  `json:"rating,omitempty"`
+	ISBN      string   `json:"isbn,omitempty"`
 	Version   int32    `json:"-"`
 }
 
@@ -38,12 +39,12 @@ func (b BookModel) Insert(book *Book) error {
 	//the query variable holds the postgres sql statement that will be run to create a new record
 	//the values are "positional arguments" and are being populated by the args variable below
 	query := `
-	INSERT INTO books (title, author, published, pages, genres, rating)
-	VALUES ($1, $2, $3, $4, $5, $6)
+	INSERT INTO books (title, author, published, pages, genres, rating, isbn)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id, created_at, version`
 
 	//the blank interface below is taking in all the information from the pointer to a book above and then populates the query variable VALUES
-	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating}
+	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ISBN}
 
 	//this first runs the INSERT statement with the query and the args so the row is put into the database
 	//it then returns back some values with the second part (which corresponds to the RETURNING part of the statement above)
@@ -59,7 +60,7 @@ func (b BookModel) Get(id int64) (*Book, error) {
 	}
 	//this pulls the specific record from the database
 	query := `
-	SELECT id, created_at, title, author, published, pages, genres, rating, version
+	SELECT id, created_at, title, author, published, pages, genres, rating, isbn, version
 	FROM books
 	WHERE id = $1`
 	//this variable is used to hold all of the information for the book record from the database
@@ -75,6 +76,7 @@ func (b BookModel) Get(id int64) (*Book, error) {
 		&book.Pages,
 		pq.Array(&book.Genres),
 		&book.Rating,
+		&book.ISBN,
 		&book.Version,
 	)
 	//this switch case is handling potential errors
@@ -94,11 +96,11 @@ func (b BookModel) Get(id int64) (*Book, error) {
 func (b BookModel) Update(book *Book) error {
 	query := `
 	UPDATE books
-	SET title = $1, author = $2, published = $3, pages = $4, genres = $5, rating = $6, version = version +1
-	WHERE id = $7 AND version = $8
+	SET title = $1, author = $2, published = $3, pages = $4, genres = $5, rating = $6, isbn = $7, version = version +1
+	WHERE id = $8 AND version = $9
 	RETURNING version`
 
-	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ID, book.Version}
+	args := []interface{}{book.Title, book.Author, book.Published, book.Pages, pq.Array(book.Genres), book.Rating, book.ISBN, book.ID, book.Version}
 	return b.DB.QueryRow(query, args...).Scan(&book.Version)
 }
 
@@ -162,6 +164,7 @@ func (b BookModel) GetAll() ([]*Book, error) {
 			&book.Pages,
 			pq.Array(&book.Genres),
 			&book.Rating,
+			&book.ISBN,
 			&book.Version,
 		)
 		if err != nil {

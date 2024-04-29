@@ -16,6 +16,7 @@ interface Book {
     pages: number;
     genres: string[];
     rating: number;
+    isbn: string;
 }
 
 export const Books: React.FC = () => {
@@ -100,6 +101,7 @@ export const Books: React.FC = () => {
                             <TableCell className="columnHeader" onClick={() => handleHeaderClick("pages")} aria-label="Pages">Pages {sortColumn === "pages" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
                             <TableCell className="">Genres</TableCell>
                             <TableCell className="columnHeader" onClick={() => handleHeaderClick("rating")} aria-label="Rating">Rating {sortColumn === "rating" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
+                            <TableCell className="">ISBN</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -112,6 +114,7 @@ export const Books: React.FC = () => {
                                 <TableCell>{row.pages}</TableCell>
                                 <TableCell>{row.genres.join(', ')}</TableCell>
                                 <TableCell>{row.rating.toFixed(1)}</TableCell>
+                                <TableCell>{row.isbn}</TableCell>
                             </TableRow>
                         )
                         )}

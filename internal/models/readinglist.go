@@ -16,6 +16,7 @@ type Book struct { //type for each book in the envelopes
 	Pages     int      `json:"pages"`
 	Genres    []string `json:"genres"`
 	Rating    float32  `json:"rating"`
+	ISBN      string   `json:"isbn"`
 }
 
 type BookResponse struct { //type for enveloped single-book json responses

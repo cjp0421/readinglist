@@ -1,6 +1,6 @@
 CREATE DATABASE readinglist;
 
-CREATE ROLE readinglist WITH LOGIN PASSWORD 'pa55w0rd';
+CREATE ROLE readinglist WITH LOGIN PASSWORD '*';
 
 CREATE TABLE IF NOT EXISTS books (
     id bigserial PRIMARY KEY,
@@ -11,13 +11,14 @@ CREATE TABLE IF NOT EXISTS books (
     pages integer NOT NULL,
     genres text[] NOT NULL,
     rating real NOT NULL, 
+    isbn text,
     version integer NOT NULL DEFAULT 1
 );
-/*changed data type of rating to real to accomodate decimals */
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON books TO readinglist;
 
 GRANT USAGE, SELECT ON SEQUENCE books_id_seq TO readinglist;
 
 /*Sample Book*/
-INSERT INTO books (title, author, published, pages, genres, rating)
-VALUES ('Sample Book', 'Author Name', 2021, 300, ARRAY['Fiction'], 4.5);
+INSERT INTO books (title, author, published, pages, genres, rating, isbn)
+VALUES ('Sample Book', 'Author Name', 2021, 300, ARRAY['Fiction'], 4.5, '000-00-00000-00-1');

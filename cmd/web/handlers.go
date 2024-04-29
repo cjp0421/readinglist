@@ -160,6 +160,8 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	isbn := r.PostForm.Get("isbn")
+
 	//below is an anonymous struct - those have to be instantiated right away
 	book := struct {
 		Title     string   `json:"title"`
@@ -168,6 +170,7 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		Published int      `json:"published"`
 		Genres    []string `json:"genres"`
 		Rating    float32  `json:"rating"`
+		ISBN      string   `json:"isbn"`
 	}{ //this is a struct literal
 		Title:     title,
 		Author:    author,
@@ -175,6 +178,7 @@ func (app *application) bookCreateProcess(w http.ResponseWriter, r *http.Request
 		Published: published,
 		Genres:    genres,
 		Rating:    float32(rating),
+		ISBN:      isbn,
 	}
 
 	data, err := json.Marshal(book)
