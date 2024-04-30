@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" //This is a driver; this is the go package for the sql database driver; third-party package
 
 	"readinglist/internal/data"
@@ -29,16 +30,26 @@ type application struct {
 }
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	var cfg config
+
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	cfg.dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|stage|prod)")
-	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("READINGLIST_DB_DSN"), "PostgreSQL DSN")
 	flag.Parse()
 
 	fmt.Println("hello")
 
-	cfg.dsn = "postgres://postgres:mysecretpassword@localhost/readinglist?sslmode=disable"
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	//below opens the database connection
