@@ -21,3 +21,23 @@ export const getBookById = async (id: number) => {
         throw new Error('Failed to fetch book details');
     }
 }
+
+export const createBook = async (bookData) => {
+    try {
+        const response = await axios.post(API_URL, bookData);
+        return response.data;
+    } catch (error) {
+        //todo: fix up this error handlingto be spiffier
+        throw error;
+    }
+}
+
+export const deleteBook = async (id: number) => {
+    try {
+        const response = await axios.delete(`${API_URL}/${id}`)
+        return response.data;
+    } catch (error) {
+        console.error('Failed to delete book:', error)
+        throw error;
+    }
+}

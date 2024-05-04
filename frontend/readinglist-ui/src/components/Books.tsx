@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from "react";
-import { getBooks } from "../services/bookService";
+import { getBooks, deleteBook } from "../services/bookService";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -7,6 +7,10 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { IconButton } from "@mui/material";
+
 
 interface Book {
     id: number;
@@ -43,6 +47,16 @@ export const Books: React.FC = () => {
         } else {
             setSortColumn(column)
             setSortOrder("asc")
+        }
+    }
+
+    const handleDelete = async (id) => {
+        try {
+            await deleteBook(id)
+            setBooks(books.filter(book => book.id !== id))
+            console.log('Book deleted successfully')
+        } catch (error) {
+            console.error('Error deleting book:', error)
         }
     }
 
@@ -102,19 +116,25 @@ export const Books: React.FC = () => {
                             <TableCell className="">Genres</TableCell>
                             <TableCell className="columnHeader" onClick={() => handleHeaderClick("rating")} aria-label="Rating">Rating {sortColumn === "rating" && (sortOrder === "asc" ? "↑" : "↓")}</TableCell>
                             <TableCell className="">ISBN</TableCell>
+                            <TableCell className="">Action</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {sortedData.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell component="th" scope="row">{row.id}</TableCell>
-                                <TableCell>{row.title}</TableCell>
-                                <TableCell>{row.author}</TableCell>
-                                <TableCell>{row.published}</TableCell>
-                                <TableCell>{row.pages}</TableCell>
-                                <TableCell>{row.genres.join(', ')}</TableCell>
-                                <TableCell>{row.rating.toFixed(1)}</TableCell>
-                                <TableCell>{row.isbn}</TableCell>
+                            <TableRow key={row?.id}>
+                                <TableCell component="th" scope="row">{row?.id}</TableCell>
+                                <TableCell>{row?.title}</TableCell>
+                                <TableCell>{row?.author}</TableCell>
+                                <TableCell>{row?.published}</TableCell>
+                                <TableCell>{row?.pages}</TableCell>
+                                <TableCell>{row?.genres.join(', ')}</TableCell>
+                                <TableCell>{row?.rating.toFixed(1)}</TableCell>
+                                <TableCell>{row?.isbn}</TableCell>
+                                <TableCell>
+                                    <IconButton onClick={() => handleDelete(row?.id)} aria-label="delete">
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </IconButton>
+                                </TableCell>
                             </TableRow>
                         )
                         )}
