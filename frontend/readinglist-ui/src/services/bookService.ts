@@ -11,3 +11,13 @@ export const getBooks = async () => {
         throw error;
     }
 };
+
+export const getBookById = async (id: number) => {
+    try {
+        const response = await axios.get(`${API_URL}/${id}`)
+        console.log("API:", response.data.book.author)
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to fetch book details');
+    }
+}
