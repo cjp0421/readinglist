@@ -15,7 +15,7 @@ export const getBooks = async () => {
 export const getBookById = async (id: number) => {
     try {
         const response = await axios.get(`${API_URL}/${id}`)
-        console.log("API:", response.data.book.author)
+        console.log("API:", response.data.book)
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch book details');
