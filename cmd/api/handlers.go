@@ -67,9 +67,9 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 	}
 	//if the endpoint /v1/books is used with post, it does the following
 	if r.Method == http.MethodPost {
-		// fmt.Fprintln(w, "Added a new book to the reading list")
+
 		//below are the pieces of information we expect that will then be unmarshalled into a go object
-		//we are not using the Book struct that already exists because that contains different fields we don't need/want
+
 		var input struct {
 			Title     string   `json:"title"`
 			Author    string   `json:"author"`
@@ -85,7 +85,6 @@ func (app *application) getCreateBooksHandler(w http.ResponseWriter, r *http.Req
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		// fmt.Fprintf(w, "%v\n", input) //this prints out the http response formatted with line breaks as the input struct
 
 		book := &data.Book{
 			Title:     input.Title,
