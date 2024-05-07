@@ -225,7 +225,6 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		book.Pages = *input.Pages
 	}
 
-	//why doesn't this use an asterisk/pointer? Is it because we want it to be overwritten?
 	if len(input.Genres) > 0 {
 		book.Genres = input.Genres
 	}
@@ -238,7 +237,6 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 		book.ISBN = *input.ISBN
 	}
 
-	//why are we using the err variable for this?
 	//this is where the record is being updated in the database
 	err = app.models.Books.Update(book)
 	if err != nil {
