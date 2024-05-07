@@ -10,11 +10,13 @@ function App() {
   return (
     <Router>
       <NavBar />
-      <Routes>
-        <Route path="/books/:bookId" element={<BookDetail />} />
-        <Route path="/" element={<Books />} />
-        <Route path="/books/add" element={<AddBook />} />
-      </Routes>
+      <div>
+        <Routes>
+          <Route path="/books/:bookId" element={<BookDetail />} />
+          <Route path="/" element={<Books />} />
+          <Route path="/books/add" element={<AddBook />} />
+        </Routes>
+      </div>
     </Router>
   )
 }

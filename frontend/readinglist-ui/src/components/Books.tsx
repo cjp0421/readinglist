@@ -9,7 +9,8 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { IconButton } from "@mui/material";
+import { IconButton, Link } from "@mui/material";
+import { Link as RouterLink } from 'react-router-dom';
 
 
 interface Book {
@@ -68,8 +69,8 @@ export const Books: React.FC = () => {
             .map((row) => {
                 if (row.id.toString().includes(String(searchTerm).toLowerCase()) ||
                     row.title.includes(String(searchTerm).toLowerCase()) ||
-                    row.author.includes(String(searchTerm).toLowerCase()) /*||
-                    row.genres.toString().includes(String(searchTerm).toLowerCase())*/ ||
+                    row.author.includes(String(searchTerm).toLowerCase()) ||
+                    row.genres.toString().includes(String(searchTerm).toLowerCase()) ||
                     row.pages.toString().includes(String(searchTerm).toLowerCase()) ||
                     row.rating.toString().includes(String(searchTerm).toLowerCase())
                 ) {
@@ -123,7 +124,11 @@ export const Books: React.FC = () => {
                         {sortedData.map((row) => (
                             <TableRow key={row?.id}>
                                 <TableCell component="th" scope="row">{row?.id}</TableCell>
-                                <TableCell>{row?.title}</TableCell>
+                                <TableCell>
+                                    <Link component={RouterLink} to={`/books/${row?.id}`}>
+                                        {row?.title}
+                                    </Link>
+                                </TableCell>
                                 <TableCell>{row?.author}</TableCell>
                                 <TableCell>{row?.published}</TableCell>
                                 <TableCell>{row?.pages}</TableCell>
