@@ -32,6 +32,16 @@ export const createBook = async (bookData) => {
     }
 }
 
+export const updateBookById = async (id: number, bookData) => {
+    try {
+        const response = await axios.put(`${API_URL}/${id}`, bookData)
+        return response.data;
+    } catch (error) {
+        console.error('Failed to update book:', error);
+        throw new Error('Failed to update book details')
+    }
+}
+
 export const deleteBook = async (id: number) => {
     try {
         const response = await axios.delete(`${API_URL}/${id}`)

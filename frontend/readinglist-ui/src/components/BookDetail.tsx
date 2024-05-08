@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getBookById } from '../services/bookService';
+import { getBookById, updateBookById } from '../services/bookService';
 import { useParams } from 'react-router-dom';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import { Paper, Table, TableBody, TableHead, TableRow } from '@mui/material';
+import { TableCell, TableContainer, Paper, Table, TableBody, TableHead, TableRow, TextField } from '@mui/material';
 
 interface Book {
     id: number;
@@ -30,27 +28,43 @@ const initialBookState: Book = {
 const BookDetail = () => {
     const { bookId } = useParams<{ bookId: string }>();
     const [book, setBook] = useState<Book>(initialBookState);
-    const [isLoading, setIsLoading] = useState(true);
+    const [editState, setEditState] = useState<Record<string, boolean>>({})
 
     useEffect(() => {
-        setIsLoading(true)
         console.log('Fetching book with ID: ', bookId)
         getBookById(Number(bookId))
             .then(data => {
                 console.log('Book data received: ', data)
                 setBook(data.book)
-                setIsLoading(false)
                 console.log(book)
             })
             .catch(error => {
                 console.error('Error fetching book:', error);
-                setIsLoading(false)
             }
             )
 
     }, [bookId])
 
-    if (isLoading) {
+    const toggleEdit = (field: string) => {
+        setEditState(prev => ({ ...prev, [field]: !prev[field] }))
+    }
+
+    const handleChange = (field: string, value: string | number) => {
+        if (book) {
+            setBook(prev => prev ? { ...prev, [field]: value } : null)
+        }
+    }
+
+    const handleBlur = (field: string) => {
+        toggleEdit(field);
+        if (book) {
+            updateBookById(book.id, { [field]: book[field] }).catch(error => {
+                console.error(`Failed to update ${field}:`, error);
+            });
+        }
+    }
+
+    if (!book) {
         return <p>Loading</p>
     }
 
@@ -61,32 +75,39 @@ const BookDetail = () => {
             <Table aria-label="simple table">
                 <TableHead>
                     <TableRow>
-                        <TableCell className="columnHeader" aria-label="ID">ID</TableCell>
-                        <TableCell className="columnHeader" aria-label="Title">Title </TableCell>
-                        <TableCell className="columnHeader" aria-label="Author">Author </TableCell>
-                        <TableCell className="columnHeader" aria-label="Published">Published </TableCell>
-                        <TableCell className="columnHeader" aria-label="Pages">Pages </TableCell>
-                        <TableCell className="">Genres</TableCell>
-                        <TableCell className="columnHeader" aria-label="Rating">Rating </TableCell>
-                        <TableCell className="">ISBN</TableCell>
+                        {Object.keys(book).map(key => (
+                            <TableCell key={key}>{(key != "id" && key != "isbn") ? key[0].toUpperCase() + key.substring(1) : key.toUpperCase()}</TableCell>
+                        ))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
+                    <TableRow>
 
-                    <TableRow key={book.id}>
-                        <TableCell component="th" scope="row">{book.id}</TableCell>
-                        <TableCell>{book.title}</TableCell>
-                        <TableCell>{book.author}</TableCell>
-                        <TableCell>{book.published}</TableCell>
-                        <TableCell>{book.pages}</TableCell>
-                        <TableCell>{book.genres.join(', ')}</TableCell>
-                        <TableCell>{book.rating.toFixed(1)}</TableCell>
-                        <TableCell>{book.isbn}</TableCell>
+                        {Object.entries(book).map(([key, value]) =>
+                        (
+                            <TableCell key={key} onClick={() => toggleEdit(key)}>
+                                {
+                                    editState[key] ? (
+                                        <TextField
+                                            value={value}
+                                            onChange={(e) => handleChange(key, e.target.value)}
+                                            onBlur={() => handleBlur(key)}
+                                            autoFocus
+                                            fullWidth
+                                        />
+
+
+                                    ) : (
+                                        key === 'genres' ? value.join(', ') : value
+                                    )}
+
+
+                            </TableCell>
+                        ))}
                     </TableRow>
-
                 </TableBody>
             </Table>
-        </TableContainer>
+        </TableContainer >
     )
 }
 

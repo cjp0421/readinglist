@@ -62,17 +62,20 @@ export const Books: React.FC = () => {
     }
 
     const filteredData = useMemo(() => {
+        const lowerCaseSearchTerm = String(searchTerm).toLowerCase();
         if (searchTerm === "") {
             return books
         }
         return books
             .map((row) => {
-                if (row.id.toString().includes(String(searchTerm).toLowerCase()) ||
-                    row.title.includes(String(searchTerm).toLowerCase()) ||
-                    row.author.includes(String(searchTerm).toLowerCase()) ||
-                    row.genres.toString().includes(String(searchTerm).toLowerCase()) ||
-                    row.pages.toString().includes(String(searchTerm).toLowerCase()) ||
-                    row.rating.toString().includes(String(searchTerm).toLowerCase())
+                if (
+                    row.id.toString().includes(lowerCaseSearchTerm) ||
+                    row.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    row.author.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    row.genres.some(genre => genre.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    row.pages.toString().includes(lowerCaseSearchTerm) ||
+                    row.rating.toString().includes(lowerCaseSearchTerm) ||
+                    row.isbn.toString().includes(lowerCaseSearchTerm)
                 ) {
                     return row
                 }
