@@ -1,0 +1,177 @@
+
+
+
+# docker-compose up -d --build
+# open docker desktop in postresql container 
+# cd /data/postgres
+# echo "host all all all $POSTGRES_HOST_AUTH_METHOD" >> pg_hba.conf
+#pgadmine localhostname (hostname) is not localhost  -> postgres_container  --- same thing adminer 
+
+
+# docker run -v "C:/:/mnt/c/" -it mcr.microsoft.com/powershell:latest
+# /mnt/c/Windows/System32/cmd.exe /c set
+
+#redis --https://hackernoon.com/how-to-configurate-redis-redis-commander-docker-616136f2
+# apk update
+# apk add nano
+# redis-cli 
+# CONFIG SET requirepass MDNcVb924a
+
+
+services:
+
+  golang:
+    # platform: linux/amd64
+    container_name: golang_container
+    #restart: always
+    build:
+      dockerfile: Dockerfile
+      context: .
+    # target: dev
+    environment:
+      API_SERVER_ADDR: ":3000"
+      DATABASE_URL: postgres://postgres_container@db/react?sslmode=disable
+      VIRTUAL_HOST: app.example.com
+
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+       - .:/app:rw,delegated
+    command: air ./app/cmd/api/main.go -b 0.0.0.0
+    working_dir: /app
+    
+    networks:
+    - backend
+
+  # https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md
+  migrate: &basemigrate
+    profiles: ["tools"]
+    image: migrate/migrate
+    entrypoint: "migrate -database postgresql://local-dev@db/api?sslmode=disable -path /tmp/migrations"
+    command: up
+    links:
+      - postgres
+    volumes:
+      - ./migrations:/tmp/migrations
+
+  create-migration:
+    <<: *basemigrate
+    entrypoint: migrate create -dir /tmp/migrations -ext sql
+    command: ""
+
+  postgres:
+    container_name: postgres_container
+    image: postgres:14.1
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    restart: unless-stopped
+    # command: ash -c "./scripts/pq-host.sh" 
+
+  # mysql:
+  #   image: mariadb:10.5.8
+  #   container_name: go-maria
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: a12345
+  #     MYSQL_DATABASE: wordpress
+  #     MYSQL_USER: wpuser
+  #     MYSQL_PASSWORD: wppassword
+  #   ports:
+  #     - 8889:3306
+  #   restart: always
+  #   networks:
+  #     - backend
+  #   # volumes: ["./:/var/www/mysqlData"]
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - backend
+    restart: unless-stopped
+
+
+
+  redis:
+    container_name: redis
+    hostname: redis
+    image: i386/redis:alpine
+    #image: arm64v8/redis:alpine
+    command: redis-server --save 60 1 --requirepass MDNcVb924a --loglevel warning 
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=redis:127.0.0.1:6379 -p 8081:8081 
+      - HTTP_USER=root
+      - HTTP_PASSWORD=qwerty
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks:
+      - backend
+    depends_on:
+      - redis
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
+    container_name: adminer
+    networks:
+      - backend    
+
+  # visualizer:
+  #   image: dockersamples/visualizer:stable
+  #   ports:
+  #     - "8083:8080"
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   deploy:
+  #       placement:
+  #         constraints: [node.role == manager]
+  #   networks:
+  #     - backend
+
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+    postgres:
+    pgadmin:
+    redis-data:
+    golang:

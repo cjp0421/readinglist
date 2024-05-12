@@ -11,7 +11,7 @@ import (
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/books/{id}", getBookHandler).Methods("GET")
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":3000", r)
 }
 
 func getBookHandler(w http.ResponseWriter, r *http.Request) {

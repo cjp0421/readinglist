@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-catch */
 import axios from 'axios'
 
-const API_URL = 'http://localhost:4000/v1/books';
+const API_URL = 'http://localhost:3001/v1/books';
 
 export const getBooks = async () => {
     try {

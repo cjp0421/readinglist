@@ -12,29 +12,17 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" //This is a driver; this is the go package for the sql database driver; third-party package
 
+	"readinglist/internal/api"
 	"readinglist/internal/data"
 )
-
-const version = "2.0.0"
-
-type config struct {
-	port int
-	env  string
-	dsn  string // short for data name service; aka a data connection string; this will be passed in so we can connect to the database
-}
-
-type application struct {
-	config config
-	logger *log.Logger
-	models data.Models
-}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	var cfg config
+	var cfg api.Config
+	// dfdsfdsf
 
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
@@ -42,10 +30,10 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	cfg.dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
+	cfg.Dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 
-	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|stage|prod)")
+	flag.IntVar(&cfg.Port, "port", 3001, "API server port")
+	flag.StringVar(&cfg.Env, "env", "dev", "Environment (dev|stage|prod)")
 	flag.Parse()
 
 	fmt.Println("hello")
@@ -53,7 +41,7 @@ func main() {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	//below opens the database connection
-	db, err := sql.Open("postgres", cfg.dsn)
+	db, err := sql.Open("postgres", cfg.Dsn)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -67,37 +55,23 @@ func main() {
 
 	logger.Printf("database connection pool established")
 
-	app := &application{
-		config: cfg,
-		logger: logger,
-		models: data.NewModels(db),
+	app := &api.Application{
+		Config: cfg,
+		Logger: logger,
+		Models: data.NewModels(db),
 	}
 
-	addr := fmt.Sprintf(":%d", cfg.port)
+	addr := fmt.Sprintf(":%d", cfg.Port)
 
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      app.route(),
+		Handler:      app.Route(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("starting %s server on %s", cfg.env, addr)
+	logger.Printf("starting %s server on %s", cfg.Env, addr)
 	err = srv.ListenAndServe()
 	logger.Fatal(err)
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
