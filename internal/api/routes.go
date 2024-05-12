@@ -1,10 +1,10 @@
-package main
+package api
 
 import "net/http"
 
 // This instantiates all of the routes
 // this is a method tied to application (it takes in app, defined in main.go as an instance of the struct type application) that returns a new ServeMux
-func (app *application) route() http.Handler {
+func (app *Application) Route() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/healthcheck", app.healthcheck) // this is an route
 	// Endpoints are functions available through the API

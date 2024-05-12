@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ type envelope map[string]any
 
 // Credit: Alex Edwards, Let's Go Further
 // This was added to replace duplicated code in the handlers so as to observed the DRY principle
-func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *Application) WriteJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 // it also helps protect the web service by setting a maximum allowed bytes
 // and it disallows unknown fields, meaning you can pass in json fields that aren't part of the struct that is defined on the interface
 // that's why this uses the decoder instead of just unmarshall
-func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+func (app *Application) ReadJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 	maxBytes := 1_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes)) //sets max bytes
 
